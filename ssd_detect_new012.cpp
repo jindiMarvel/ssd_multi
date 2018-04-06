@@ -34,11 +34,9 @@ using namespace caffe;  // NOLINT(build/namespaces)
 //1/5
 using namespace cv;
 using namespace std;
-int NUM_DET=2;
-int row_sum=3,col_sum=3;
+int NUM_DET=1;
+int row_sum=1,col_sum=1;
 float area_out=10000000,area_in=3000;
-const string& model_file2 = "models/VGGNet/VOC0712/SSD_150x150/deploy.prototxt";
-const string& weights_file2 = "models/VGGNet/VOC0712/SSD_150x150/VGG_VOC0712_SSD_150x150_iter_120000.caffemodel";
 string myConvert(float Num)
 {
   Num=int(1000*Num)*0.001;
@@ -319,7 +317,9 @@ std::vector<vector<float> > Detector::Detect(const cv::Mat& img) {
   /* Copy the output layer to a std::vector */
   Blob<float>* result_blob = net_->output_blobs()[0];
   const float* result = result_blob->cpu_data();
+  cout<<"cpu_data: "<<*result<<endl;
   const int num_det = result_blob->height();
+  cout<<"num_det: "<<num_det<<endl;
   vector<vector<float> > detections;
   for (int k = 0; k < num_det; ++k) {
     if (result[0] == -1) {
@@ -328,6 +328,11 @@ std::vector<vector<float> > Detector::Detect(const cv::Mat& img) {
       continue;
     }
     vector<float> detection(result, result + 7);
+    for(int i=0;i<7;i++){
+      cout<<"detection: "<<detection[*result+i]<<endl;
+    }
+    cout<<endl;
+    
     detections.push_back(detection);
     result += 7;
   }
@@ -510,23 +515,12 @@ public:
         cv::Mat mask;
         int width = img.size().width;
         int height = img.size().height;
-        /*
         for(int i=0;i<row_sum;i++){
           for(int k=0;k<col_sum;k++){
             cv::Rect rec(width/col_sum*k,height/row_sum*i,width/col_sum,height/row_sum);
             mask = img(rec);
             result[num_result]=dt[det_num]->Detect(mask);
             if((i*col_sum+k)%detector_step!=0){++det_num;det_num=det_num%NUM_DET;}
-            ++num_result;
-          }
-        }*/
-        //new_cross_Detector
-        for(int i=0;i<row_sum;i++){
-          for(int k=0;k<col_sum;k++){
-            cv::Rect rec(width/col_sum*k,height/row_sum*i,width/col_sum,height/row_sum);
-            mask = img(rec);
-            result[num_result]=dt[1]->Detect(mask);
-            //if((i*col_sum+k)%detector_step!=0){++det_num;det_num=det_num%NUM_DET;}
             ++num_result;
           }
         }
@@ -594,7 +588,7 @@ gettimeofday(&t1,NULL);
 
   // Initialize the network.
   Detector detector(model_file, weights_file, mean_file, mean_value);
-  Detector detector1(model_file2, weights_file2, mean_file, mean_value);
+  //Detector detector1(model_file, weights_file, mean_file, mean_value);
   //Detector detector2(model_file, weights_file, mean_file, mean_value);
   //Detector detector3(model_file, weights_file, mean_file, mean_value);
 
@@ -615,7 +609,7 @@ gettimeofday(&t1,NULL);
 
   Controller ctl;
   ctl.add_detector(detector);
-  ctl.add_detector(detector1);
+  //ctl.add_detector(detector1);
   //ctl.add_detector(detector2);
   //ctl.add_detector(detector3);
 
